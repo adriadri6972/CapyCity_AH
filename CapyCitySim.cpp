@@ -6,8 +6,9 @@
 using namespace std;
 
 //initial Variablen
-int rows = 0,columns = 0, sizeTolerance = 40;
+int rows = 0, columns = 0, sizeTolerance = 40;
 double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
+const char BLANK = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
 string** field;
 
 //Methoden
@@ -18,7 +19,7 @@ void println(string out) {
 	cout << out << endl;
 }
 
-void menue() {
+bool menue() {
 	println("");
 	println("|---------- Hauptmenue ------------|");
 	println("|                                  |");
@@ -34,22 +35,30 @@ void menue() {
 	string input = "";
 	regex test("^([1-5]{0,1})$");
 	cin >> input;
+	
 	if (regex_match(input, test)) {
 		switch (stoi(input)) {
 		case 1: printField();break;
 		case 2: setField(setPositionX(), setPositionY(), setValue());break;
-		case 3: deletePlot(setDeletePositionX(), setDeletePositionY());break;
+		case 3: deleteField(setDeletePositionX(), setDeletePositionY());break;
 		case 4: printbuildingMaterialCost();break;
 		case 5:
-			for (int i = 0; i < rows; i++) {
-				delete[] field[i];
-			}
-			delete[] field;
-			exit(0);break;
+			return false;break;
 		default:
+			for (int i = 0;i <= columns;i++) {
+				delete field[i];
+			}
+			delete field;
 			println("Menue Fehler!\tEingabe ist nicht erlaubt!");
 			menue();
 		}
+		if (input == "5") {
+			return false;
+		}
+		else {
+			return menue();
+		}
+		
 	}
 	else {
 		println("\nEingabe ist nicht erlaubt!\n");
@@ -57,21 +66,22 @@ void menue() {
 	}
 }
 
-void deletePlot(int x, int y) {
-	field[x][y] = 32;
+void deleteField(int x, int y) {
+	field[y][x] = BLANK;
 }
 
 void generateField(int x, int y) {
-	field = new string * [x];
-	for (int i = 0;i <= x;i++) {
+	field = new string* [x];
+	for (int i = 0;i <= y;i++) {
 		field[i] = new string[y];
 	}
 	for (int height = 0;height < columns;height++) {
 		for (int width = 0;width < rows;width++) {
-			field[width][height] = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
+			field[width][height] = BLANK;
 		}
 	}
 }
+
 
 void printField() {
 	if (rows <= 0 && columns <= 0) {
@@ -88,7 +98,7 @@ void printField() {
 					printf("| \033[91mW\033[0m |");
 				}
 				else if (field[(x / 2)][y] == "S") {
-					printf("| \033[93mA\033[0m |");
+					printf("| \033[93mS\033[0m |");
 				}
 				else {
 					print("| " + field[(x / 2)][y] + " |");
@@ -167,11 +177,13 @@ void printbuildingMaterialCost() {
 }
 
 void setField(int x, int y, Building* value) {
-	if (field[x][y] == "A" || field[x][y] == "W" || field[x][y] == "S") {
+
+	if ((field[x][y] == "A" || field[x][y] == "W") || field[x][y] == "S") {
 		print("\nBauplatz ist schon belegt! Bau woanders!\n");
-		return menue();
 	}
-	buildBuilding(x, y, setEndX(x), setEndY(y), value);
+	else {
+		buildBuilding(x, y, setEndX(x), setEndY(y), value);
+	}
 }
 
 void buildBuilding(int startX, int startY, int endX, int endY, Building* value) {
@@ -181,7 +193,6 @@ void buildBuilding(int startX, int startY, int endX, int endY, Building* value) 
 
 	for (int height = startY;height <= endY;height++) {
 		for (int width = startX;width <= endX;width++) {
-			//if ((height >= startY && height <= endY) && (width >= startX && width <= endX)) {
 			yKoordinates[zaehler] = width;
 			xKoordinates[zaehler] = height;
 			zaehler++;
@@ -190,8 +201,6 @@ void buildBuilding(int startX, int startY, int endX, int endY, Building* value) 
 				delete[] xKoordinates;
 				delete[] yKoordinates;
 				return;
-				//	}
-					//field[height][width] = value;
 			}
 		}
 	}
@@ -220,41 +229,35 @@ void buildBuilding(int startX, int startY, int endX, int endY, Building* value) 
 }
 
 int setDeletePositionX() {
-	print("zu loeschende Tiefenkoordinate: ");
-	int xD;
-	if (cin >> xD) {
-		if (xD < 0 || xD > columns) {
-			println("Tiefenkoordinate muss zwischen 0 und " + to_string(columns) + " liegen!");
-			setDeletePositionX;
-		}
-		return xD;
+	print("zu loeschende Breitenkoordinate: ");
+	string xD = "";
+	regex test("^([0-9][0-9]{0,1})$");
+	cin >> xD;
+	if (regex_match(xD, test) && stoi(xD) < columns) {
+		return stoi(xD);
 	}
-	else if (!cin.bad() && !cin.eof()) {
+	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Eingabe ist nicht erlaubt!");
+		println("Breite muss zwischen -1 und " + to_string(columns) + " liegen!");
 		return setDeletePositionX();
 	}
-	return 0;
 }
 
 int setDeletePositionY() {
-	print("zu loeschende Breitenkoordinate: ");
-	int yD;
-	if (cin >> yD) {
-		if (yD < 0 || yD > rows) {
-			println("Breitenkoordinate muss zwischen 0 und " + to_string(rows) + " liegen!");
-			setDeletePositionX;
-		}
-		return yD;
+	print("zu loeschende Tiefenkoordinate: ");
+	string yD = "";
+	regex test("^([0-9][0-9]{0,1})$");
+	cin >> yD;
+	if (regex_match(yD, test) && stoi(yD) < rows) {
+		return stoi(yD);
 	}
-	else if (!cin.bad() && !cin.eof()) {
+	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Eingabe ist nicht erlaubt!");
+		println("Tiefe muss zwischen -1 und " + to_string(rows) + " liegen!");
 		return setDeletePositionY();
 	}
-	return 0;
 }
 
 int setEndX(int startX) {

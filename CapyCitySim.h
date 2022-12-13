@@ -11,12 +11,12 @@ using namespace std;
 
 void print(std::string out);
 void println(std::string out);
-void menue();
+bool menue();
 void generateField(int x, int y);
 void printField();
 void printCost();
 void printbuildingMaterialCost();
-void deletePlot(int x, int y);
+void deleteField(int x, int y);
 void setField(int x, int y, Building* value);
 void buildBuilding(int startX, int startY, int endX, int endY, Building* value);
 int setDimensionX();
