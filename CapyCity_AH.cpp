@@ -74,7 +74,7 @@ void menue() {
 	println("|__________________________________|");
 	print("\nEingabe: ");
 
-	string input;
+	string input = "";
 	regex test("^([1-5]{0,1})$");
 	cin >> input;
 	if (regex_match(input, test)) {
@@ -143,7 +143,7 @@ int setDeletePositionY() {
 
 void generateField(int x, int y) {
 	field = new string * [x];
-	for (int i = 0;i < x;i++) {
+	for (int i = 0;i <= x;i++) {
 		field[i] = new string[y];
 	}
 	for (int height = 0;height < columns;height++) {
@@ -195,19 +195,19 @@ void buildBuilding(int startX, int startY, int endX, int endY, string value) {
 	int* xKoordinates = new int[sizeToleranz * sizeToleranz];
 	int* yKoordinates = new int[sizeToleranz * sizeToleranz];
 	int zaehler = 0;
-	for (int height = 0;height <= columns;height++) {
-		for (int width = 0;width <= rows;width++) {
-			if ((height >= startY && height <= endY) && (width >= startX && width <= endX)) {
-				yKoordinates[zaehler] = width;
-				xKoordinates[zaehler] = height;
-				zaehler++;
-				if (field[height][width] == "A" || field[height][width] == "W" || field[height][width] == "S") {
-					println("\nes steht nicht der komplette Bauplatz zur verfuegung! Bauvorhaben abgebrochen!\n");
-					delete[] xKoordinates;
-					delete[] yKoordinates;
-					return;
-				}
-				//field[height][width] = value;
+	for (int height = startY;height <= endY;height++) {
+		for (int width = startX;width <= endX;width++) {
+			//if ((height >= startY && height <= endY) && (width >= startX && width <= endX)) {
+			yKoordinates[zaehler] = width;
+			xKoordinates[zaehler] = height;
+			zaehler++;
+			if (field[height][width] == "A" || field[height][width] == "W" || field[height][width] == "S") {
+				println("\nEs steht nicht der komplette Bauplatz zur verfuegung! Bauvorhaben abgebrochen!\n");
+				delete[] xKoordinates;
+				delete[] yKoordinates;
+				return;
+				//	}
+					//field[height][width] = value;
 			}
 		}
 	}
@@ -220,39 +220,39 @@ void buildBuilding(int startX, int startY, int endX, int endY, string value) {
 
 int setEndX(int startX) {
 	print("\nWie breit soll das Gebauede werden?\nBreite: ");
-	string x;
+	string x = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> x;
 	if (regex_match(x, test) && startX + stoi(x) - 1 < columns) {
-		return (startX + stoi(x) - 1);
+		return ((startX + stoi(x)) - 1);
 	}
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen 0 und " + to_string((columns-startX)+1) + " liegen!");
-		setEndX(startX);
+		println("Breite muss zwischen 0 und " + to_string((columns - startX) + 1) + " liegen!");
+		return setEndX(startX);
 	}
 }
 
 int setEndY(int startY) {
 	print("\nWie tief soll das Gebauede werden?\nTiefe: ");
-	string y;
+	string y = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> y;
 	if (regex_match(y, test) && startY + stoi(y) - 1 < rows) {
-		return (startY + stoi(y) - 1);
+		return ((startY + stoi(y)) - 1);
 	}
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen 0 und " + to_string(rows-startY) + " liegen!");
-		setEndY(startY);
+		println("Tiefe muss zwischen 0 und " + to_string(rows - startY + 1) + " liegen!");
+		return setEndY(startY);
 	}
 }
 
 int setDimensionX() {
 	print("Grundstueckstiefe: ");
-	string n;
+	string n = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> n;
 	if (regex_match(n, test) && stoi(n) <= sizeToleranz) {
@@ -263,16 +263,16 @@ int setDimensionX() {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
 		println("Tiefe muss zwischen 0 und " + to_string(sizeToleranz + 1) + " liegen!");
-		setDimensionX();
+		return setDimensionX();
 	}
 }
 
 int setDimensionY() {
 	print("Grundstuecksbreite: ");
-	string m;
+	string m = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> m;
-	if (regex_match(m, test) && stoi(m) <= sizeToleranz) { 
+	if (regex_match(m, test) && stoi(m) <= sizeToleranz) {
 		columns = stoi(m);
 		return stoi(m);
 	}
@@ -280,13 +280,13 @@ int setDimensionY() {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
 		println("Breite muss zwischen 0 und " + to_string(sizeToleranz + 1) + " liegen!");
-		setDimensionY();
+		return setDimensionY();
 	}
 }
 
 int setPositionX() {
 	print("Breitenposition: ");
-	string x;
+	string x = "";
 	regex test("^([0-9][0-9]{0,1})$");
 	cin >> x;
 	if (regex_match(x, test) && stoi(x) < columns) {
@@ -296,13 +296,13 @@ int setPositionX() {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
 		println("Breite muss zwischen -1 und " + to_string(columns) + " liegen!");
-		setPositionX();
+		return setPositionX();
 	}
 }
 
 int setPositionY() {
 	print("Tiefenposition: ");
-	string y;
+	string y = "";
 	regex test("^([0-9][0-9]{0,1})$");
 	cin >> y;
 	if (regex_match(y, test) && stoi(y) < rows) {
@@ -312,21 +312,43 @@ int setPositionY() {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
 		println("Tiefe muss zwischen -1 und " + to_string(rows) + " liegen!");
-		setPositionY();
+		return setPositionY();
 	}
 }
 
 string setValue() {
 	println("\nWelcher Energieerzeuger soll platziert werden?\nWasserkraftwerk (A), Windkraftwerk (W), Soloarpannel (S)");
-	string value;
+	string value = "";
+	MyEnum eNum = LEER;
+
 	if (cin >> value) {
-		if (value == "A" || value == "W" || value == "S") {
-			return value;
+		if (value == "A") {
+			eNum = WASSER;
+		}
+		else if (value == "W") {
+			eNum = WIND;
+		}
+		else if (value == "S") {
+			eNum = SONNE;
 		}
 		else {
-			println("Eingabe ist nicht erlaubt!");
-			return setValue();
+			eNum = LEER;
 		}
+		switch (eNum) {
+		case WASSER: return "A";break;
+		case WIND: return "W";break;
+		case SONNE: return "S";break;
+		default: 
+			println("Eingabe ist nicht erlaubt!");
+			return setValue();break;
+		}
+		//if (value == "A" || value == "W" || value == "S") {
+		//	return value;
+		//}
+		//else {
+		//	println("Eingabe ist nicht erlaubt!");
+		//	return setValue();
+		//}
 	}
 	else if (!cin.bad() && !cin.eof()) {
 		cin.clear();
