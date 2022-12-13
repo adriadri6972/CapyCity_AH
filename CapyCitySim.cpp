@@ -1,59 +1,16 @@
 // CapyCity_AH.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include <iostream>
-#include <list>
-#include <regex>
-#include <iomanip>
-#include <sstream>
-#include "Building.h"
 #include "CapyCitySim.h"
 
 using namespace std;
 
-int rows = 0, columns = 0, sizeToleranz = 40;
+//initial Variablen
+int rows = 0,columns = 0, sizeTolerance = 40;
 double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
 string** field;
 
-int main();
-
-void print(string out);
-void println(string out);
-void menue();
-void generateField(int x, int y);
-void printField();
-void setField(int x, int y, Building* value);
-int setDimensionX();
-int setDimensionY();
-int setPositionX();
-int setPositionY();
-int setDeletePositionX();
-int setDeletePositionY();
-void deletePlot(int x, int y);
-Building* setValue();
-void buildBuilding(int startX, int startY, int endX, int endY, Building* value);
-int setEndX(int startX);
-int setEndY(int startY);
-bool wannaBuild(double cost);
-string formate(double cost);
-void printCost();
-void printbuildingMaterialCost();
-
-int main()
-{
-	println("Willkommen in CapyCity buildertool!");
-	println("Mit diesem Tool kann eine Bauflaeche von bis zu " + to_string(sizeToleranz) + "x" + to_string(sizeToleranz) + " Feldern bebaut werden.");
-	println("\nAktuelle unterstuetze Bauvorhaben sind:\nWasserkarftwerk (als A markiert)\nWindkraftwerk (als W markiert)\nSolarpanele (als S markiert)");
-	println("\nInfo: Positionskoordinaten beziehen sich auf die linke obere Ecke des jeweiligen Gebauedes");
-	println("\nBitte verwenden sie diese Anwendung im Vollbildmodus");
-	println("\nInitialisiere Grundstueck...\n");
-	generateField(setDimensionX(), setDimensionY());
-	while (true) {
-		menue();
-	}
-	return 0;
-}
-
+//Methoden
 void print(string out) {
 	cout << out;
 }
@@ -153,9 +110,9 @@ void printCost() {
 	println("                                                                              ");
 	println("                          aktuelle Kostenuebersicht:                          ");
 	println("                                                                              ");
-	println("                      Wasserkraftwerke: " + formate(currentAquaCost) + " Euro ");
-	println("                      Windkraftwerke:   " + formate(currentWindCost) + " Euro ");
-	println("                      Solarkraftwerke:  " + formate(currentSolaCost) + " Euro ");
+	println("                  Wasserkraftwerke (A): " + formate(currentAquaCost) + " Euro ");
+	println("                  Windkraftwerke (W):   " + formate(currentWindCost) + " Euro ");
+	println("                  Solarkraftwerke (S):  " + formate(currentSolaCost) + " Euro ");
 	println("______________________________________________________________________________");
 	println("                          Gesamtkosten: " + formate(currentTotalCost) + " Euro");
 	println("                                                                              ");
@@ -218,8 +175,8 @@ void setField(int x, int y, Building* value) {
 }
 
 void buildBuilding(int startX, int startY, int endX, int endY, Building* value) {
-	int* xKoordinates = new int[sizeToleranz * sizeToleranz];
-	int* yKoordinates = new int[sizeToleranz * sizeToleranz];
+	int* xKoordinates = new int[sizeTolerance * sizeTolerance];
+	int* yKoordinates = new int[sizeTolerance * sizeTolerance];
 	int zaehler = 0;
 
 	for (int height = startY;height <= endY;height++) {
@@ -337,14 +294,14 @@ int setDimensionX() {
 	string n = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> n;
-	if (regex_match(n, test) && stoi(n) <= sizeToleranz) {
+	if (regex_match(n, test) && stoi(n) <= sizeTolerance) {
 		rows = stoi(n);
 		return stoi(n);
 	}
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen 0 und " + to_string(sizeToleranz + 1) + " liegen!");
+		println("Tiefe muss zwischen 0 und " + to_string(sizeTolerance + 1) + " liegen!");
 		return setDimensionX();
 	}
 }
@@ -354,14 +311,14 @@ int setDimensionY() {
 	string m = "";
 	regex test("^([1-9][0-9]{0,1})$");
 	cin >> m;
-	if (regex_match(m, test) && stoi(m) <= sizeToleranz) {
+	if (regex_match(m, test) && stoi(m) <= sizeTolerance) {
 		columns = stoi(m);
 		return stoi(m);
 	}
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen 0 und " + to_string(sizeToleranz + 1) + " liegen!");
+		println("Breite muss zwischen 0 und " + to_string(sizeTolerance + 1) + " liegen!");
 		return setDimensionY();
 	}
 }
@@ -396,6 +353,10 @@ int setPositionY() {
 		println("Tiefe muss zwischen -1 und " + to_string(rows) + " liegen!");
 		return setPositionY();
 	}
+}
+
+int getSizeTolerance() {
+	return sizeTolerance;
 }
 
 bool wannaBuild(double cost) {
