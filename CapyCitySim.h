@@ -11,8 +11,8 @@ using namespace std;
 
 void print(std::string out);
 void println(std::string out);
-bool menue();
-void generateField(int x, int y);
+void menue();
+void generateField(int x,int y);
 void printField();
 void printCost();
 void printbuildingMaterialCost();
@@ -29,5 +29,6 @@ int setEndX(int startX);
 int setEndY(int startY);
 int getSizeTolerance();
 bool wannaBuild(double cost);
+bool running();
 Building* setValue();
 std::string formate(double cost);

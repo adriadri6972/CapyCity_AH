@@ -9,7 +9,8 @@ int main()
 	println("\nBitte verwenden sie diese Anwendung im Vollbildmodus");
 	println("\nInitialisiere Grundstueck...\n");
 	generateField(setDimensionX(), setDimensionY());
-	while (menue()) {
+
+	while (running()) {
 		menue();
 	}
 	return 0;
