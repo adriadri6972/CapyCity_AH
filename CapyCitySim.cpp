@@ -3,24 +3,39 @@
 
 #include "CapyCitySim.h"
 
-using namespace std;
 
 //initial Variablen
-int rows = 0, columns = 0, sizeTolerance = 40;
-double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
-const char BLANK = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
-bool run = true;
-string field[40][40];
+//int rows = 0, columns = 0, sizeTolerance = 40;
+//double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
+//const char BLANK = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
+//string field[40][40];
+static list<CapyCitySim> allLists = {};
+
+//Konstruktor
+CapyCitySim::CapyCitySim(){
+	allLists.push_back(*this);
+	startUp();
+};
 
 //Methoden
-void print(string out) {
+void CapyCitySim::print(string out) {
 	cout << out;
 }
-void println(string out) {
+void CapyCitySim::println(string out) {
 	cout << out << endl;
 }
 
-void menue() {
+void CapyCitySim::startUp() {
+	println("Willkommen in CapyCity buildertool!");
+	println("Mit diesem Tool kann eine Bauflaeche von bis zu " + to_string(getSizeTolerance()) + "x" + to_string(getSizeTolerance()) + " Feldern bebaut werden.");
+	println("\nAktuelle unterstuetze Bauvorhaben sind:\nWasserkarftwerk (als A markiert)\nWindkraftwerk (als W markiert)\nSolarpanele (als S markiert)");
+	println("\nInfo: Positionskoordinaten beziehen sich auf die linke obere Ecke des jeweiligen Gebauedes");
+	println("\nBitte verwenden sie diese Anwendung im Vollbildmodus");
+	println("\nInitialisiere Grundstueck...\n");
+	generateField(setDimensionX(), setDimensionY());
+}
+
+void CapyCitySim::menue() {
 	println("");
 	println("|---------- Hauptmenue ------------|");
 	println("|                                  |");
@@ -43,7 +58,7 @@ void menue() {
 		case 2: setField(setPositionX(), setPositionY(), setValue());break;
 		case 3: deleteField(setDeletePositionX(), setDeletePositionY());break;
 		case 4: printbuildingMaterialCost();break;
-		case 5: run = false;break;
+		case 5: exit(0);break;
 		default:
 			println("Menue Fehler!\tEingabe ist nicht erlaubt!");
 		}
@@ -53,19 +68,19 @@ void menue() {
 	}
 }
 
-void deleteField(int x, int y) {
+void CapyCitySim::deleteField(int x, int y) {
 	field[y][x] = BLANK;
 }
 
-void generateField(int x, int y) {
+void CapyCitySim::generateField(int x, int y) {
 	for (int height = 0;height < columns;height++) {
 		for (int width = 0;width < rows;width++) {
-			field[width][height] = BLANK;
+			this->field[width][height] = BLANK;
 		}
 	}
 }
 
-void printField() {
+void CapyCitySim::printField() {
 	if (rows <= 0 && columns <= 0) {
 		print("kein Feld gefunden");
 		return;
@@ -96,7 +111,7 @@ void printField() {
 	printCost();
 }
 
-void printCost() {
+void CapyCitySim::printCost() {
 	println("\n");
 	println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 	println("                                                                              ");
@@ -113,7 +128,7 @@ void printCost() {
 	println("\n");
 }
 
-void printbuildingMaterialCost() {
+void CapyCitySim::printbuildingMaterialCost() {
 	Building* aqua = new AquaEnergie();
 	Building* wind = new WindEnergie();
 	Building* sola = new SolarEnergie();
@@ -158,7 +173,7 @@ void printbuildingMaterialCost() {
 	delete plas;
 }
 
-void setField(int x, int y, Building* value) {
+void CapyCitySim::setField(int x, int y, Building* value) {
 	if ((field[x][y] == "A" || field[x][y] == "W") || field[x][y] == "S") {
 		print("\nBauplatz ist schon belegt! Bau woanders!\n");
 	}
@@ -167,7 +182,7 @@ void setField(int x, int y, Building* value) {
 	}
 }
 
-void buildBuilding(int startX, int startY, int endX, int endY, Building* value) {
+void CapyCitySim::buildBuilding(int startX, int startY, int endX, int endY, Building* value) {
 	int* xKoordinates = new int[sizeTolerance * sizeTolerance];
 	int* yKoordinates = new int[sizeTolerance * sizeTolerance];
 	int zaehler = 0;
@@ -209,7 +224,7 @@ void buildBuilding(int startX, int startY, int endX, int endY, Building* value) 
 	delete[] yKoordinates;
 }
 
-int setDeletePositionX() {
+int CapyCitySim::setDeletePositionX() {
 	print("zu loeschende Breitenkoordinate: ");
 	string xD = "";
 	regex test("^([0-9][0-9]{0,1})$");
@@ -225,7 +240,7 @@ int setDeletePositionX() {
 	}
 }
 
-int setDeletePositionY() {
+int CapyCitySim::setDeletePositionY() {
 	print("zu loeschende Tiefenkoordinate: ");
 	string yD = "";
 	regex test("^([0-9][0-9]{0,1})$");
@@ -241,7 +256,7 @@ int setDeletePositionY() {
 	}
 }
 
-int setEndX(int startX) {
+int CapyCitySim::setEndX(int startX) {
 	print("\nWie breit soll das Gebauede werden?\nBreite: ");
 	string x = "";
 	regex test("^([1-9][0-9]{0,1})$");
@@ -257,7 +272,7 @@ int setEndX(int startX) {
 	}
 }
 
-int setEndY(int startY) {
+int CapyCitySim::setEndY(int startY) {
 	print("\nWie tief soll das Gebauede werden?\nTiefe: ");
 	string y = "";
 	regex test("^([1-9][0-9]{0,1})$");
@@ -273,7 +288,7 @@ int setEndY(int startY) {
 	}
 }
 
-int setDimensionX() {
+int CapyCitySim::setDimensionX() {
 	print("Grundstueckstiefe: ");
 	string n = "";
 	regex test("^([1-9][0-9]{0,1})$");
@@ -290,7 +305,7 @@ int setDimensionX() {
 	}
 }
 
-int setDimensionY() {
+int CapyCitySim::setDimensionY() {
 	print("Grundstuecksbreite: ");
 	string m = "";
 	regex test("^([1-9][0-9]{0,1})$");
@@ -307,7 +322,7 @@ int setDimensionY() {
 	}
 }
 
-int setPositionX() {
+int CapyCitySim::setPositionX() {
 	print("Breitenposition: ");
 	string x = "";
 	regex test("^([0-9][0-9]{0,1})$");
@@ -323,7 +338,7 @@ int setPositionX() {
 	}
 }
 
-int setPositionY() {
+int CapyCitySim::setPositionY() {
 	print("Tiefenposition: ");
 	string y = "";
 	regex test("^([0-9][0-9]{0,1})$");
@@ -339,11 +354,11 @@ int setPositionY() {
 	}
 }
 
-int getSizeTolerance() {
+int CapyCitySim::getSizeTolerance() {
 	return sizeTolerance;
 }
 
-bool wannaBuild(double cost) {
+bool CapyCitySim::wannaBuild(double cost) {
 	print("Das Gebaeude kostet " + formate(cost) + " Euro.\nsoll das Gebaeude gebaut werden? j/n\n");
 	string quest = "";
 	regex j("[j]");
@@ -364,18 +379,14 @@ bool wannaBuild(double cost) {
 	}
 }
 
-bool running() {
-	return run;
-}
-
-string formate(double cost) {
+string CapyCitySim::formate(double cost) {
 	std::stringstream stream;
 	stream << std::fixed << std::setprecision(2) << cost;
 	std::string strCost = stream.str();
 	return strCost;
 }
 
-Building* setValue() {
+Building* CapyCitySim::setValue() {
 	println("\nWelcher Energieerzeuger soll platziert werden?\nWasserkraftwerk (A), Windkraftwerk (W), Soloarpannel (S)");
 	string value = "";
 
