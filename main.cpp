@@ -22,7 +22,7 @@ int main()
 		while (!simulator.blueprintList.empty()&&simulator.currentBlueprint->getInBlue()) {
 			// wenn im aktuellen Blueprint ein flag gesetzt ist werden die Blueprints miteinander verglichen
 			if (simulator.currentBlueprint->getwannaTest()) {
-				simulator.vergleichen();
+				simulator.compare();
 			}
 			simulator.currentBlueprint->menue();
 		}

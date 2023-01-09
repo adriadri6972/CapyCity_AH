@@ -23,7 +23,7 @@ public:
 	void switchBlueprint();
 	string formate(double cost);
 	void printAll();
-	void vergleichen();
+	void compare();
 	bool wannaDelete(int);
 	static int getcurrentBlueprintNumber();
 };

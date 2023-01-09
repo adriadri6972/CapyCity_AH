@@ -145,7 +145,7 @@ void CapyCity::printAll() {
 //wieder aufgefüllt (zu löschender Blueprint gibt es ja hier nicht)
 //die index Nummer wird hierbei neu vergeben und alle index die größer als das zu löschende Element waren rutschen eins runter um 
 //die entstandene Lücke zu schließen
-void CapyCity::vergleichen() {
+void CapyCity::compare() {
 
 	vector<pair<int, Blueprint>> testList;
 
