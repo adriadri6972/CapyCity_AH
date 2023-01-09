@@ -1,371 +1,204 @@
-// CapyCity_AH.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include "CapyCitySim.h"
 
+using namespace std;
 
-//initial Variablen
-//int rows = 0, columns = 0, sizeTolerance = 40;
-//double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
-//const char BLANK = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
-//string field[40][40];
-static list<CapyCitySim> allLists = {};
+//statische Variblen um überall die Blueprintanzahl und die aktuelle Nummer zur Verfügung zu haben
+static int blueprintCount = 0;
+static int currentBlueprintNumber=0;
 
-//Konstruktor
-CapyCitySim::CapyCitySim(){
-	allLists.push_back(*this);
-	startUp();
-};
 
-//Methoden
-void CapyCitySim::print(string out) {
-	cout << out;
-}
-void CapyCitySim::println(string out) {
-	cout << out << endl;
-}
-
-void CapyCitySim::startUp() {
-	println("Willkommen in CapyCity buildertool!");
-	println("Mit diesem Tool kann eine Bauflaeche von bis zu " + to_string(getSizeTolerance()) + "x" + to_string(getSizeTolerance()) + " Feldern bebaut werden.");
-	println("\nAktuelle unterstuetze Bauvorhaben sind:\nWasserkarftwerk (als A markiert)\nWindkraftwerk (als W markiert)\nSolarpanele (als S markiert)");
-	println("\nInfo: Positionskoordinaten beziehen sich auf die linke obere Ecke des jeweiligen Gebauedes");
-	println("\nBitte verwenden sie diese Anwendung im Vollbildmodus");
-	println("\nInitialisiere Grundstueck...\n");
-	generateField(setDimensionX(), setDimensionY());
+//erzeugen eines neuen Blueprints und erweitern der map um diesen Blueprint mit dem zugehörigen index als pair
+//aktueller Blueprint und Blueprintnummer = der gerade erzeugte
+//hohzählen der gesamt Blueprintanzahl
+//ich weiß nicht genau was es mit dem stack/heap fehler auf sich hat der hier markiert ist???
+//bitte um Feedback was ich hier anders machen kann um das zu vermeiden
+void CapyCity::addBlueprint() {
+	Blueprint x =  Blueprint();
+	blueprintList.insert(std::pair<int, Blueprint>(blueprintCount, x));
+	currentBlueprint = &blueprintList.find(blueprintList.size()-1)->second;
+	currentBlueprintNumber=blueprintCount;
+	blueprintCount++;
+	//delete &x;
 }
 
-void CapyCitySim::menue() {
-	println("");
-	println("|---------- Hauptmenue ------------|");
-	println("|                                  |");
-	println("|  aktuellen Bauplan ausgeben (1)  |");
-	println("|     Gebaeude platzieren (2)      |");
-	println("|     Gebaeude entfernen (3)       |");
-	println("|   Gebaeude/Material kosten (4)   |");
-	println("|       Programm Beenden (5)       |");
-	println("|                                  |");
-	println("|__________________________________|");
-	print("\nEingabe: ");
+//Blueprintmenü um alle Blueprints zu verwalten
+//Eingabebeschränkung durch regex auf die zahlen 1-4
+//wenn mindesten ein Blueprint existiert wird nach diesem Menü die flag gesetzt die dafür sorgt das im main script das Hauptmenü
+//aufgerufen wird
+void CapyCity::blueprintMenue() {
+	cout <<""<<endl;
+	cout <<"|----------- Blueprints -----------|"<<endl;
+	cout <<"|                                  |"<<endl;
+	cout <<"|        neuer Blueprint (1)       |"<<endl;
+	cout <<"|      Blueprint wechseln (2)      |"<<endl;
+	cout <<"|          alle Drucken (3)        |"<<endl;
+	cout <<"|       Programm Beenden (4)       |"<<endl;
+	cout <<"|                                  |"<<endl;
+	cout <<"|__________________________________|"<<endl;
+	cout <<"\nEingabe: ";
 
 	string input = "";
-	regex test("^([1-5]{0,1})$");
+	regex test("^([1-4]{0,1})$");
 	cin >> input;
 
 	if (regex_match(input, test)) {
 		switch (stoi(input)) {
-		case 1: printField();break;
-		case 2: setField(setPositionX(), setPositionY(), setValue());break;
-		case 3: deleteField(setDeletePositionX(), setDeletePositionY());break;
-		case 4: printbuildingMaterialCost();break;
-		case 5: exit(0);break;
+		case 1: addBlueprint();break;
+		case 2: switchBlueprint();break;
+		case 3: printAll();break;
+		case 4: exit(0);break;
 		default:
-			println("Menue Fehler!\tEingabe ist nicht erlaubt!");
+			cout<<" Fehler!\tEingabe ist nicht erlaubt!";
 		}
 	}
 	else {
-		println("\nEingabe ist nicht erlaubt!\n");
+		cout<<"\nEingabe ist nicht erlaubt!\n"<<endl;
+	}
+	if (!blueprintList.empty()) {
+		currentBlueprint->setInBlue(true);
 	}
 }
 
-void CapyCitySim::deleteField(int x, int y) {
-	field[y][x] = BLANK;
-}
-
-void CapyCitySim::generateField(int x, int y) {
-	for (int height = 0;height < columns;height++) {
-		for (int width = 0;width < rows;width++) {
-			this->field[width][height] = BLANK;
-		}
-	}
-}
-
-void CapyCitySim::printField() {
-	if (rows <= 0 && columns <= 0) {
-		print("kein Feld gefunden");
+//Ordnen der Blueprints nach ihrer index Nummer (garnicht so leicht in einer ungeordneten map) + ausgabe auf der Konsole
+//Eingabebeschränkung mit regex und prüfen ob die eingabe kleiner ist als die Menge aller Blueprints
+//rekursiver aufruf bis eine valide eingabe erfolgt
+void CapyCity::switchBlueprint() {
+	int count = 0;
+	//prüfen
+	if (blueprintList.empty()) {
+		cout << "\nkeine Blueprints vorhanden" << endl;
 		return;
 	}
-	for (int x = 0;x < (rows * 2) + 1;x++) {
-		for (int y = 0;y < columns;y++) {
-			if (x % 2 == 1) {
-				if (field[(x / 2)][y] == "A") {
-					printf("| \033[36mA\033[0m |");
-				}
-				else if (field[(x / 2)][y] == "W") {
-					printf("| \033[91mW\033[0m |");
-				}
-				else if (field[(x / 2)][y] == "S") {
-					printf("| \033[93mS\033[0m |");
-				}
-				else {
-					print("| " + field[(x / 2)][y] + " |");
-				}
-			}
-			else {
-				print("|---|");
-			}
-		}
-		println("");
+	cout << "\n" << endl;
+	//ordnen
+	while (count < blueprintList.size()) {
+		cout << "Blueprint #" + to_string(count) +"   Effizienzberechnung(Kennzahl): "+to_string(blueprintList.find(count)->second.getKennzahl()) << endl;
+		count++;
 	}
-
-	printCost();
-}
-
-void CapyCitySim::printCost() {
-	println("\n");
-	println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-	println("                                                                              ");
-	println("                          aktuelle Kostenuebersicht:                          ");
-	println("                                                                              ");
-	println("                  Wasserkraftwerke (A): " + formate(currentAquaCost) + " Euro ");
-	println("                  Windkraftwerke (W):   " + formate(currentWindCost) + " Euro ");
-	println("                  Solarkraftwerke (S):  " + formate(currentSolaCost) + " Euro ");
-	println("______________________________________________________________________________");
-	println("                          Gesamtkosten: " + formate(currentTotalCost) + " Euro");
-	println("                                                                              ");
-	println("                                                                              ");
-	println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-	println("\n");
-}
-
-void CapyCitySim::printbuildingMaterialCost() {
-	Building* aqua = new AquaEnergie();
-	Building* wind = new WindEnergie();
-	Building* sola = new SolarEnergie();
-	Material* wood = new Wood();
-	Material* iron = new Iron();
-	Material* plas = new Plastic();
-	println("\n");
-	println("|----------------------------------------------------------------------|");
-	println("|                               CapaCity                               |");
-	println("|======================================================================|");
-	println("|                                                                      |");
-	println("|                        Basispreis Gebauede:                          |");
-	println("|                                                                      |");
-	println("|                  " + aqua->getName() + " (" + aqua->getLabel() + "): " + formate(aqua->getGroundPrice()) + " Euro                    |");
-	println("|                  " + wind->getName() + "   (" + wind->getLabel() + "): " + formate(wind->getGroundPrice()) + " Euro                    |");
-	println("|                  " + sola->getName() + "  (" + sola->getLabel() + "): " + formate(sola->getGroundPrice()) + " Euro                    |");
-	println("|                                                                      |");
-	println("|                                                                      |");
-	println("|                        Basispreis Material:                          |");
-	println("|                                                                      |");
-	println("|                       " + wood->getName() + ":       " + formate(wood->getPrice()) + " Euro                         |");
-	println("|                       " + iron->getName() + ":      " + formate(iron->getPrice()) + " Euro                         |");
-	println("|                       " + plas->getName() + ": " + formate(plas->getPrice()) + " Euro                         |");
-	println("|                                                                      |");
-	println("|                                                                      |");
-	println("|                       Benoetigte Rescourcen:                         |");
-	println("|                                                                      |");
-	println("|     " + aqua->getName() + " (" + aqua->getLabel() + "): " + aqua->listMaterials() + "    |");
-	println("|     " + wind->getName() + "   (" + wind->getLabel() + "): " + wind->listMaterials() + "    |");
-	println("|     " + sola->getName() + "  (" + sola->getLabel() + "): " + sola->listMaterials() + "    |");
-	println("|                                                                      |");
-	println("|                                                                      |");
-	println("|______________________________________________________________________|");
-	println("|______________________________________________________________________|");
-	println("\n");
-
-	delete aqua;
-	delete wind;
-	delete sola;
-	delete wood;
-	delete iron;
-	delete plas;
-}
-
-void CapyCitySim::setField(int x, int y, Building* value) {
-	if ((field[x][y] == "A" || field[x][y] == "W") || field[x][y] == "S") {
-		print("\nBauplatz ist schon belegt! Bau woanders!\n");
-	}
-	else {
-		buildBuilding(x, y, setEndX(x), setEndY(y), value);
-	}
-}
-
-void CapyCitySim::buildBuilding(int startX, int startY, int endX, int endY, Building* value) {
-	int* xKoordinates = new int[sizeTolerance * sizeTolerance];
-	int* yKoordinates = new int[sizeTolerance * sizeTolerance];
-	int zaehler = 0;
-
-	for (int height = startY;height <= endY;height++) {
-		for (int width = startX;width <= endX;width++) {
-			yKoordinates[zaehler] = width;
-			xKoordinates[zaehler] = height;
-			zaehler++;
-			if (field[height][width] == "A" || field[height][width] == "W" || field[height][width] == "S") {
-				println("\nEs steht nicht der komplette Bauplatz zur verfuegung! Bauvorhaben abgebrochen!\n");
-				delete[] xKoordinates;
-				delete[] yKoordinates;
-				return;
-			}
-		}
-	}
-
-	currentBuildingCost = value->getGroundPrice() + (value->sumMaterialCosts() * zaehler);
-
-	if (wannaBuild(currentBuildingCost)) {
-		for (int i = 0;i < zaehler;i++) {
-			field[xKoordinates[i]][yKoordinates[i]] = value->getLabel();
-		}
-		if (value->getLabel() == "A") {
-			currentAquaCost += currentBuildingCost;
-		}
-		else if (value->getLabel() == "W") {
-			currentWindCost += currentBuildingCost;
-		}
-		else if (value->getLabel() == "S") {
-			currentSolaCost += currentBuildingCost;
-		}
-	}
-	else {
-		println("\nBau wurde abgebrochen.\n");
-	}
-	delete[] xKoordinates;
-	delete[] yKoordinates;
-}
-
-int CapyCitySim::setDeletePositionX() {
-	print("zu loeschende Breitenkoordinate: ");
-	string xD = "";
-	regex test("^([0-9][0-9]{0,1})$");
-	cin >> xD;
-	if (regex_match(xD, test) && stoi(xD) < columns) {
-		return stoi(xD);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen -1 und " + to_string(columns) + " liegen!");
-		return setDeletePositionX();
-	}
-}
-
-int CapyCitySim::setDeletePositionY() {
-	print("zu loeschende Tiefenkoordinate: ");
-	string yD = "";
-	regex test("^([0-9][0-9]{0,1})$");
-	cin >> yD;
-	if (regex_match(yD, test) && stoi(yD) < rows) {
-		return stoi(yD);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen -1 und " + to_string(rows) + " liegen!");
-		return setDeletePositionY();
-	}
-}
-
-int CapyCitySim::setEndX(int startX) {
-	print("\nWie breit soll das Gebauede werden?\nBreite: ");
-	string x = "";
-	regex test("^([1-9][0-9]{0,1})$");
-	cin >> x;
-	if (regex_match(x, test) && startX + stoi(x) - 1 < columns) {
-		return ((startX + stoi(x)) - 1);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen 0 und " + to_string((columns - startX) + 1) + " liegen!");
-		return setEndX(startX);
-	}
-}
-
-int CapyCitySim::setEndY(int startY) {
-	print("\nWie tief soll das Gebauede werden?\nTiefe: ");
-	string y = "";
-	regex test("^([1-9][0-9]{0,1})$");
-	cin >> y;
-	if (regex_match(y, test) && startY + stoi(y) - 1 < rows) {
-		return ((startY + stoi(y)) - 1);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen 0 und " + to_string(rows - startY + 1) + " liegen!");
-		return setEndY(startY);
-	}
-}
-
-int CapyCitySim::setDimensionX() {
-	print("Grundstueckstiefe: ");
-	string n = "";
-	regex test("^([1-9][0-9]{0,1})$");
-	cin >> n;
-	if (regex_match(n, test) && stoi(n) <= sizeTolerance) {
-		rows = stoi(n);
-		return stoi(n);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen 0 und " + to_string(sizeTolerance + 1) + " liegen!");
-		return setDimensionX();
-	}
-}
-
-int CapyCitySim::setDimensionY() {
-	print("Grundstuecksbreite: ");
-	string m = "";
-	regex test("^([1-9][0-9]{0,1})$");
-	cin >> m;
-	if (regex_match(m, test) && stoi(m) <= sizeTolerance) {
-		columns = stoi(m);
-		return stoi(m);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen 0 und " + to_string(sizeTolerance + 1) + " liegen!");
-		return setDimensionY();
-	}
-}
-
-int CapyCitySim::setPositionX() {
-	print("Breitenposition: ");
-	string x = "";
-	regex test("^([0-9][0-9]{0,1})$");
-	cin >> x;
-	if (regex_match(x, test) && stoi(x) < columns) {
-		return stoi(x);
-	}
-	else {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Breite muss zwischen -1 und " + to_string(columns) + " liegen!");
-		return setPositionX();
-	}
-}
-
-int CapyCitySim::setPositionY() {
-	print("Tiefenposition: ");
+	cout << "\nBlueprint waehlen: #";
 	string y = "";
 	regex test("^([0-9][0-9]{0,1})$");
 	cin >> y;
-	if (regex_match(y, test) && stoi(y) < rows) {
-		return stoi(y);
+	if (regex_match(y, test) && stoi(y) < blueprintList.size()) {
+		currentBlueprint = &blueprintList.find(stoi(y))->second;
+		currentBlueprintNumber = blueprintList.find(stoi(y))->first;
 	}
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Tiefe muss zwischen -1 und " + to_string(rows) + " liegen!");
-		return setPositionY();
+		cout << "\nEingabe ungueltig!\n"<<endl;
+		switchBlueprint();
 	}
 }
 
-int CapyCitySim::getSizeTolerance() {
-	return sizeTolerance;
+
+//kopiere die ganze Blueprintmap in einen dreiteiligen Vektor	
+//Vektor besteht aus double Kennzahl,int index,Blueprint Objekt
+//merken des aktuellen Blueprints in "currentBlueprint2"
+//solange der dreiteilige Vektor nicht leer ist:
+//-> iteriere in einer for-Schleife über alle paare 
+//-> merke das mit der größten Kennzahl und an welchem index dieses im vektor steht
+//-> größtest dreierpaar wird zum aktuellen Blueprint und wird auf der Konsole ausgegeben 
+//-> entferne das größte dreierpaar aus dem Vektor (am gemerkter index)
+//wenn der Vektor leer ist wird der aktuelle Bauplan durch den gemerkten "currentBlueprint2" wieder korrigiert
+//auch hier entsteht ein stack/heap Problem???
+void CapyCity::printAll() {
+	if (!blueprintList.empty()) {
+		cout << "\nSortiere Blueprints absteigend nach Kennzahl:" << endl;
+
+		vector<pair<double, pair<int, Blueprint*>>> list;
+		Blueprint* currentBlueprint2=currentBlueprint;
+
+		for (pair<int, Blueprint> x : blueprintList) {
+			list.push_back(make_pair(x.second.getKennzahl(), make_pair(x.first,&x.second)));
+		}
+		while(!list.empty()) {
+			pair<double, pair<int, Blueprint*>> highest = make_pair(list.at(0).first, make_pair(list.at(0).second.first, list.at(0).second.second));
+			int position = 0;
+			for (int i = 0;i < list.size();i++) {
+				if (list.at(i).first > highest.first) {
+					highest.first = list.at(i).first;
+					highest.second.first = list.at(i).second.first;
+					highest.second.second = list.at(i).second.second;
+					position = i;
+				}
+			}
+			currentBlueprint = &blueprintList.find(highest.second.first)->second;
+			cout << "\nBlueprint #" + to_string(highest.second.first) +" ("+to_string(currentBlueprint->getWidth())+"x"+ to_string(currentBlueprint->getHeight()) +") ----- Kennzahl: "+ to_string(currentBlueprint->getKennzahl()) << endl;
+			currentBlueprint->printField();
+			list.erase(list.begin() + position, list.begin() + position + 1);
+		}
+		currentBlueprint = currentBlueprint2;
+	}
+	else {
+		cout<<"\n keine Blueprints vorhanden"<<endl;
+	}
 }
 
-bool CapyCitySim::wannaBuild(double cost) {
-	print("Das Gebaeude kostet " + formate(cost) + " Euro.\nsoll das Gebaeude gebaut werden? j/n\n");
+//kopiere die Blueprintmap in einen zweiteiligen Vektor
+//beim kopieren wird gleichzeitig der aktuell gültige Blueprint nicht mit in diese Liste aufgenommen
+//for-SChleife: vergleiche den aktuellen Bauplan mit allen elementen im Vektor
+//wenn ein dreierpaar des Vektors alle Tests bestanden ist dieses mit dem aktuellen Plan identisch und es wird 
+//gefragt ob einer gelöscht werden soll
+//wenn n bleiben beide bestehen es wird beim nächsten Testen erneut gefragt
+//wenn j wird die map mit allen Blueprints gelöscht und mit den Blueprints aus dem kopierten Vektor 
+//wieder aufgefüllt (zu löschender Blueprint gibt es ja hier nicht)
+//die index Nummer wird hierbei neu vergeben und alle index die größer als das zu löschende Element waren rutschen eins runter um 
+//die entstandene Lücke zu schließen
+void CapyCity::vergleichen() {
+
+	vector<pair<int, Blueprint>> testList;
+
+	for (int i = 0;i < blueprintList.size();i++) {
+		if (currentBlueprint == nullptr || &blueprintList.find(i)->second != currentBlueprint) {
+			testList.push_back(make_pair(blueprintList.find(i)->first, blueprintList.find(i)->second));
+
+		}
+	}
+	for (pair<int, Blueprint> x : testList) {
+		if (currentBlueprint->getKennzahl() == x.second.getKennzahl()) {
+			if (currentBlueprint->getWidth() == x.second.getWidth()) {
+				if (currentBlueprint->getHeight() == x.second.getHeight()) {
+					for (int i = 0;i < currentBlueprint->getWidth();i++) {
+						for (int j = 0;j < currentBlueprint->getHeight();j++) {
+							if (currentBlueprint->getField().at(i + j) != x.second.getField().at(i + j)) {
+								return;
+							}
+						}
+					}
+					if (wannaDelete(x.first)) {
+						blueprintList.clear();
+						blueprintCount = 0;
+						for (pair<int, Blueprint> z : testList) {
+							blueprintList.insert(std::pair<int, Blueprint>(blueprintCount, z.second));
+							blueprintCount++;
+						}
+						currentBlueprint = &blueprintList.find(x.first)->second;
+						currentBlueprintNumber = blueprintList.find(x.first)->first;
+						return;
+					}
+					else {
+						return;
+					}
+				}
+			}
+		}
+	}
+	currentBlueprint->setletsTest(false);
+}
+
+//rekursive abfrage ob objekt gelöscht werden soll
+bool CapyCity::wannaDelete(int x) {
+	cout << "\nder aktuelle Bauplan(#" + to_string(currentBlueprintNumber) + ") ist identisch mit Bauplan #" + to_string(x) + " moechten Sie den aktuellen Bauplan loeschen und zu Bauplan #" + to_string(x) + " wechseln? [j/n]\n";
 	string quest = "";
 	regex j("[j]");
 	regex n("[n]");
 	cin >> quest;
 	if (regex_match(quest, j)) {
-		currentTotalCost += cost;
+		cout << "Loesche Bauplan #" + to_string(currentBlueprintNumber) + "...\n";
+		if (currentBlueprintNumber != blueprintList.size()-1) {
+			cout << "Hinweis: die Nummern aller hoeheren Bauplaene werden um 1 veringer um die entstandene Luecke zu fuellen.\n";
+		}
 		return true;
 	}
 	else if (regex_match(quest, n)) {
@@ -374,43 +207,20 @@ bool CapyCitySim::wannaBuild(double cost) {
 	else {
 		cin.clear();
 		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("\nEingabe darf nur j oder n sein\n");
-		return wannaBuild(cost);
+		cout<<"\nEingabe darf nur j oder n sein\n";
+		return wannaDelete(x);
 	}
 }
 
-string CapyCitySim::formate(double cost) {
+//zum anzeigen der deraktuellen Nummer im Hauptmenü
+int CapyCity::getcurrentBlueprintNumber() {
+	return currentBlueprintNumber;
+}
+
+//formatirung von double auf 2 nachkomma
+string CapyCity::formate(double cost) {
 	std::stringstream stream;
 	stream << std::fixed << std::setprecision(2) << cost;
 	std::string strCost = stream.str();
 	return strCost;
-}
-
-Building* CapyCitySim::setValue() {
-	println("\nWelcher Energieerzeuger soll platziert werden?\nWasserkraftwerk (A), Windkraftwerk (W), Soloarpannel (S)");
-	string value = "";
-
-	if (cin >> value) {
-		if (value == "A") {
-			return new AquaEnergie();
-		}
-		else if (value == "W") {
-			return new WindEnergie();
-		}
-		else if (value == "S") {
-			return new SolarEnergie();
-		}
-		else {
-			println("Eingabe ist nicht erlaubt!");
-			return setValue();
-		}
-	}
-
-	else if (!cin.bad() && !cin.eof()) {
-		cin.clear();
-		cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-		println("Eingabe ist nicht erlaubt!");
-		return setValue();
-	}
-	return setValue();
 }

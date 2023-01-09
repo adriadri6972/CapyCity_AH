@@ -4,12 +4,17 @@
 class Material
 {
 public:
+
+	//Variablen
 	std::string name;
 	double price;
+
+	//Methoden
 	std::string getName();
 	double getPrice();
 };
 
+//Konstruktoren
 class Wood : public Material {
 public:
 	Wood();

@@ -1,44 +1,29 @@
 #pragma once
+#include <map>
+#include <vector>
+#include "Blueprint.h"
 
-#include <iostream>
-#include <list>
-#include <regex>
-#include <iomanip>
-#include <sstream>
-#include "Building.h"
 
-using namespace std;
 
-class CapyCitySim{
-	int rows = 0, columns = 0, sizeTolerance = 40;
-	double currentTotalCost = 0, currentBuildingCost = 0, currentAquaCost = 0, currentWindCost = 0, currentSolaCost = 0;
-	const char BLANK = 32;		// 32 ist ASCII-Code und erzeugt ein leeres Feld
-	string field[40][40];
-	//static list<CapyCitySim> allLists;
+class CapyCity{
 public:
-	CapyCitySim();
+	//variablen
 
-void print(std::string out);
-void println(std::string out);
-void startUp();
-void menue();
-void generateField(int x,int y);
-void printField();
-void printCost();
-void printbuildingMaterialCost();
-void deleteField(int x, int y);
-void setField(int x, int y, Building* value);
-void buildBuilding(int startX, int startY, int endX, int endY, Building* value);
-int setDimensionX();
-int setDimensionY();
-int setPositionX();
-int setPositionY();
-int setDeletePositionX();
-int setDeletePositionY();
-int setEndX(int startX);
-int setEndY(int startY);
-int getSizeTolerance();
-bool wannaBuild(double cost);
-Building* setValue();
-std::string formate(double cost);
+	//map zur verwaltung mehrerer Blueprints
+	//ich habe mich bei der Verwaltung von anfang an für eine map entschieden weil hier nur jeweils ein Objekt mit einem dazugehörigen index
+	//benötigt wird und eine map genau dies mit einem Key und Value Wert bietet
+	std::map<int,Blueprint> blueprintList;
+
+	//zeigt auf den aktuell ausgewählten Blueprint
+	Blueprint* currentBlueprint;
+
+	//Methoden
+	void addBlueprint();
+	void blueprintMenue();
+	void switchBlueprint();
+	string formate(double cost);
+	void printAll();
+	void vergleichen();
+	bool wannaDelete(int);
+	static int getcurrentBlueprintNumber();
 };
